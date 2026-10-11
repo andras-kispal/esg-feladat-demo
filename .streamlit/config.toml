@@ -1,0 +1,15 @@
+[theme]
+# A fő hangsúlyos szín (pl. a csúszka színe) - elegáns smaragdzöld
+primaryColor = "#00875A"
+
+# A fő háttérszín
+backgroundColor = "#F4F5F7"
+
+# A másodlagos háttér (pl. az oldalsáv háttere)
+secondaryBackgroundColor = "#FFFFFF"
+
+# A szöveg színe - sötétszürke a profi olvashatóságért
+textColor = "#172B4D"
+
+# Betűtípus (lehet "sans serif", "serif", vagy "monospace")
+font = "sans serif"
