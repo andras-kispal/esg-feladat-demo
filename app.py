@@ -2,6 +2,19 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
+hide_menu_style = """
+    <style>
+    /* A felső menü és eszköztár eltüntetése */
+    #MainMenu {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden !important;}
+    header {visibility: hidden;}
+    
+    /* Az alsó vízjel eltüntetése */
+    footer {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_menu_style, unsafe_allow_html=True)
+
 # Oldal címe és leírása
 st.title("Interaktív Függvény")
 st.write("A grafikon a következő függvényt ábrázolja: $y = a \cdot \\frac{\\sin(x)}{x}$")
