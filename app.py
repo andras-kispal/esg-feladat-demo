@@ -11,6 +11,14 @@ hide_menu_style = """
     
     /* Az alsó vízjel eltüntetése */
     footer {visibility: hidden;}
+    
+    /* A "Hosted with Streamlit" lebegő ikon eltüntetése */
+    div[class^="viewerBadge"] {display: none !important;}
+    [data-testid="stViewerBadge"] {display: none !important;}
+    
+    /* A GitHub profilkép (Creator Badge) eltüntetése */
+    div[class^="creatorBadge"] {display: none !important;}
+    [data-testid="stCreatorBadge"] {display: none !important;}
     </style>
 """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
