@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 
 hide_menu_style = """
     <style>
@@ -23,28 +24,53 @@ hide_menu_style = """
 """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 
-# Oldal címe és leírása
-st.title("Interaktív Függvény")
+
+
+st.title("Interaktív Függvény (Plotly)")
 st.write("A grafikon a következő függvényt ábrázolja: $y = a \cdot \\frac{\\sin(x)}{x}$")
 
-# Csúszka (slider) létrehozása az 'a' változóhoz
-a = st.slider(
-    "Állítsd be az 'a' szorzó értékét:", 
-    min_value=-5.0,   # Minimum érték
-    max_value=5.0,    # Maximum érték
-    value=1.0,        # Alapértelmezett kezdőérték
-    step=0.5          # Lépésköz
-)
-
-# X értékek generálása -10 és 10 között
+# X értékek generálása
 x = np.linspace(-10, 10, 400)
 
-# Y értékek kiszámítása, a sliderből jövő 'a' értékkel szorozva
-# np.where-t használunk, hogy x=0 esetén ne kapjunk hibaüzenetet
-y = a * np.where(x == 0, 1.0, np.sin(x) / x)
+# Előre kiszámoljuk az összes lehetséges 'a' értéket -5 és 5 között
+a_values = np.arange(-5.0, 5.5, 0.5)
 
-# Adatok formázása a beépített ábrázolóhoz
-chart_data = pd.DataFrame({'x': x, 'y': y}).set_index('x')
+fig = go.Figure()
 
-# Vonaldiagram megjelenítése
-st.line_chart(chart_data)
+# Minden lehetséges görbét hozzáadunk az ábrához, de alapból elrejtjük őket
+for a in a_values:
+    y = a * np.where(x == 0, 1.0, np.sin(x) / x)
+    fig.add_trace(go.Scatter(x=x, y=y, visible=False, name=f"a={a}"))
+
+# A 12. indexű elem az a=1.0, ezt tesszük alapból láthatóvá induláskor
+default_idx = 12
+fig.data[default_idx].visible = True
+
+# A Plotly beépített böngészős csúszkájának (slider) létrehozása
+steps = []
+for i, a in enumerate(a_values):
+    step = dict(
+        method="update",
+        args=[{"visible": [False] * len(fig.data)}],
+        label=f"{a:.1f}"
+    )
+    # Csak az aktuális csúszka-érték görbéje látszódjon
+    step["args"][0]["visible"][i] = True  
+    steps.append(step)
+
+sliders = [dict(
+    active=default_idx,
+    currentvalue={"prefix": "Az 'a' szorzó értéke: "},
+    pad={"t": 50},
+    steps=steps
+)]
+
+# Fixáljuk az Y tengelyt, hogy az ábra ne "ugráljon" a csúszka húzásakor
+fig.update_layout(
+    sliders=sliders,
+    yaxis_range=[-1.5, 5.5],
+    margin=dict(l=0, r=0, t=30, b=0)
+)
+
+# Megjelenítés a Streamlitben
+st.plotly_chart(fig, use_container_width=True)
