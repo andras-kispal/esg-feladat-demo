@@ -1,12 +1,11 @@
 import streamlit as st
 import numpy as np
-import pandas as pd
 import plotly.graph_objects as go
 
-# 1. Oldal beállítások (Széles nézet és böngészőfül címe)
+# 1. Oldal beállítások (Széles nézet)
 st.set_page_config(page_title="ESG Portfólió Modell", layout="wide", page_icon="🌱")
 
-# 2. Vízjelek és ikonok eltüntetése (a korábbi kód)
+# 2. Vízjelek eltüntetése
 hide_menu_style = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -21,68 +20,53 @@ hide_menu_style = """
 """
 st.markdown(hide_menu_style, unsafe_allow_html=True)
 
-# 3. Fejléc
+# 3. Oldalsáv (Sidebar) létrehozása a vezérlőknek
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/1024px-GitHub_Invertocat_Logo.svg.png", width=50) # Egy kis GitHub ikon díszítésnek
+st.sidebar.title("Vezérlőpult")
+
+# ITT VAN A STREAMLIT CSÚSZKA, ami most az oldalsávon jelenik meg, és felveszi a zöld színt
+a_val = st.sidebar.slider(
+    "Átmeneti kockázati szorzó (Sokk erőssége):",
+    min_value=-5.0,
+    max_value=5.0,
+    value=1.0,
+    step=0.5
+)
+
+st.sidebar.markdown("---")
+st.sidebar.info("A csúszka mozgatásával azonnal frissül a jobb oldali modell. A negatív értékek kedvező szabályozási környezetet, a pozitívak szigorítást jelentenek.")
+
+# 4. Főoldal: Fejléc
 st.title("🌱 Klímakockázati Sokk és Stabilizációs Modell")
 st.markdown("---")
 
-# 4. Kétoszlopos elrendezés létrehozása (1/4 és 3/4 arányban)
+# 5. Kétoszlopos elrendezés a főoldalon
 col1, col2 = st.columns([1, 3])
 
-# Bal oszlop: Szakmai kontextus és magyarázat
 with col1:
     st.subheader("Vezetői Összefoglaló")
-    st.info("Ez a dashboard egy hirtelen fellépő **átmeneti klímakockázati sokk** (pl. NGFS 'Disorderly Transition' forgatókönyv) hatását szimulálja a banki portfólióra.")
-    
+    st.info("Ez a dashboard egy hirtelen fellépő **átmeneti klímakockázati sokk** hatását szimulálja a banki portfólióra.")
     st.write("**Módszertan:**")
     st.write("A modell egy csillapodó rezgés ($y = a \cdot \\frac{\\sin(x)}{x}$) segítségével mutatja be, hogyan árazza be a piac a kezdeti sokkot (EU Taxonómia szigorítás), és hogyan stabilizálódik a hitelezési portfólió az idő múlásával.")
-    
-    st.write("**Használat:**")
-    st.write("A grafikon alatti csúszkával állítható a szabályozói szigorítás (sokk) induló ereje, amely azonnali RWA (kockázattal súlyozott eszközérték) kilengést eredményez.")
 
-# Jobb oszlop: A gyors, akadásmentes Plotly grafikon
 with col2:
+    # A grafikon generálása az oldalsávból kapott 'a_val' alapján
     x = np.linspace(-10, 10, 400)
-    a_values = np.arange(-5.0, 5.5, 0.5)
+    y = a_val * np.where(x == 0, 1.0, np.sin(x) / x)
+    
     fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x, y=y, line=dict(color='#00875A', width=3), name="Portfólió RWA"))
 
-    # Görbék generálása (Streamlit zöld színnel)
-    for a in a_values:
-        y = a * np.where(x == 0, 1.0, np.sin(x) / x)
-        fig.add_trace(go.Scatter(x=x, y=y, visible=False, name=f"Sokk: {a}", line=dict(color='#00875A', width=3)))
-
-    default_idx = 12
-    fig.data[default_idx].visible = True
-
-    # Plotly belső csúszka logikája
-    steps = []
-    for i, a in enumerate(a_values):
-        step = dict(
-            method="update",
-            args=[{"visible": [False] * len(fig.data)}],
-            label=f"{a:.1f}"
-        )
-        step["args"][0]["visible"][i] = True  
-        steps.append(step)
-
-    sliders = [dict(
-        active=default_idx,
-        currentvalue={"prefix": "Átmeneti kockázati szorzó (Sokk erőssége): "},
-        pad={"t": 50},
-        steps=steps
-    )]
-
-    # Tengelyek és háttér formázása a letisztult kinézetért
     fig.update_layout(
-        sliders=sliders,
-        yaxis_range=[-1.5, 5.5],
+        yaxis_range=[-5.5, 5.5], # Fixáljuk az Y tengelyt, hogy mozgatható legyen ugrálás nélkül
         margin=dict(l=0, r=0, t=10, b=0),
         xaxis_title="Idő (Évek a szabályozási sokk után)",
         yaxis_title="Portfólió volatilitás / RWA kilengés (%)",
         plot_bgcolor='rgba(0,0,0,0)',
         paper_bgcolor='rgba(0,0,0,0)'
     )
-    # Halvány rácsvonalak hozzáadása
     fig.update_xaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='lightgray')
 
     st.plotly_chart(fig, use_container_width=True)
+
